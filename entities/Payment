@@ -1,0 +1,63 @@
+{
+  "name": "Payment",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string"
+    },
+    "reservation_id": {
+      "type": "string"
+    },
+    "customer_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "deposit",
+        "balance",
+        "full",
+        "refund"
+      ],
+      "default": "deposit"
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "card",
+        "transfer",
+        "cash",
+        "other"
+      ],
+      "default": "card"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string",
+      "default": "EUR"
+    },
+    "reference": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "failed",
+        "refunded"
+      ],
+      "default": "pending"
+    }
+  },
+  "required": [
+    "reservation_id",
+    "amount",
+    "type"
+  ]
+}
