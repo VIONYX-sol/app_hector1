@@ -25,7 +25,7 @@ export default function AdminRooms() {
   const [formData, setFormData] = useState(defaultRoom);
   const queryClient = useQueryClient();
 
-  const { data: rooms = [], isLoading } = useQuery({
+  const { data: rooms = [] } = useQuery({
     queryKey: ['admin-rooms'],
     queryFn: () => base44.entities.Room.list('sort_order', 50),
   });

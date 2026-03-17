@@ -3,12 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Search, User, Mail, Phone, CalendarDays, CreditCard } from 'lucide-react';
-import { format } from 'date-fns';
+import { Search, User, Phone, CalendarDays, CreditCard } from 'lucide-react';
 
 export default function AdminCustomers() {
   const [search, setSearch] = useState('');
