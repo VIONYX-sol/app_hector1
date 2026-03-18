@@ -1,35 +1,67 @@
 /**
- * AuthContext simplificado.
- *
- * Base44 ha sido eliminado. La autenticación/autorización debe gestionarse
- * en los flujos de n8n (p. ej., comprobando un token en la cabecera
- * Authorization de cada webhook).
- *
- * Si necesitas proteger rutas en el frontend, implementa aquí tu lógica
- * de login (JWT, sesión con cookie, etc.) y actualiza el contexto.
+ * Authentication context for admin users.
+ * Provides secure authentication state management using httpOnly cookies.
  */
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { adminApi } from '@/api/client';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  // TODO: Implementa aquí tu lógica de autenticación si necesitas proteger rutas.
-  // Opciones habituales con n8n:
-  //   1. JWT: guarda el token en localStorage, envíalo en la cabecera
-  //      Authorization: Bearer <token> dentro de src/api/base44Client.js.
-  //   2. Sesión con cookie: gestiona la cookie desde el workflow de n8n.
-  //   3. Sin auth: deja este contexto tal como está (app pública / intranet).
+  const [user, setUser] = useState(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [authError, setAuthError] = useState(null);
+
+  // Check auth status on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const userData = await adminApi.getMe();
+        setUser(userData);
+      } catch {
+        // Not authenticated - this is normal for public pages
+        setUser(null);
+      } finally {
+        setIsLoadingAuth(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  const login = useCallback(async (email, password) => {
+    setAuthError(null);
+    try {
+      const response = await adminApi.login(email, password);
+      setUser(response.user);
+      return response;
+    } catch (err) {
+      setAuthError(err.message || 'Error al iniciar sesión');
+      throw err;
+    }
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await adminApi.logout();
+    } catch {
+      // Ignore logout errors
+    } finally {
+      setUser(null);
+    }
+  }, []);
+
+  const value = {
+    user,
+    isAuthenticated: !!user,
+    isLoadingAuth,
+    authError,
+    login,
+    logout,
+  };
+
   return (
-    <AuthContext.Provider value={{
-      user: null,
-      isAuthenticated: false,
-      isLoadingAuth: false,
-      isLoadingPublicSettings: false,
-      authError: null,
-      appPublicSettings: null,
-      logout: () => {},
-      navigateToLogin: () => {},
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
@@ -42,3 +74,32 @@ export const useAuth = () => {
   }
   return context;
 };
+
+/**
+ * Protected Route wrapper for admin pages.
+ * Redirects to login if not authenticated.
+ */
+export function RequireAuth({ children }) {
+  const { isAuthenticated, isLoadingAuth } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoadingAuth && !isAuthenticated) {
+      navigate('/admin/login', { replace: true });
+    }
+  }, [isLoadingAuth, isAuthenticated, navigate]);
+
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  return children;
+}
