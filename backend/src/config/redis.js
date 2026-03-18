@@ -4,6 +4,18 @@
 // Falls back gracefully if Redis is not configured
 
 let client = null;
+let logger = null;
+
+const getLogger = () => {
+  if (!logger) {
+    try {
+      logger = require('../utils/logger'); // eslint-disable-line
+    } catch {
+      logger = console;
+    }
+  }
+  return logger;
+};
 
 const getClient = () => {
   if (!process.env.REDIS_URL) {
@@ -15,11 +27,11 @@ const getClient = () => {
       const redis = require('redis'); // eslint-disable-line
       client = redis.createClient({ url: process.env.REDIS_URL });
       client.on('error', (err) => {
-        console.error('Redis error:', err.message);
+        getLogger().error('Redis error:', err.message);
       });
-      client.connect().catch(console.error);
+      client.connect().catch((err) => getLogger().error('Redis connection error:', err.message));
     } catch (e) {
-      console.warn('Redis not available, caching disabled');
+      getLogger().warn('Redis not available, caching disabled');
     }
   }
   return client;

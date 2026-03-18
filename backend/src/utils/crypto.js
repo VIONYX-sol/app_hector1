@@ -46,17 +46,20 @@ const hashToken = (token) => {
 
 const encrypt = (text, key) => {
   const iv = crypto.randomBytes(16);
-  const k = crypto.scryptSync(key, 'salt', 32);
+  const salt = crypto.randomBytes(16);
+  const k = crypto.scryptSync(key, salt, 32);
   const cipher = crypto.createCipheriv('aes-256-cbc', k, iv);
   const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
-  return iv.toString('hex') + ':' + encrypted.toString('hex');
+  // Format: salt:iv:ciphertext (all hex)
+  return salt.toString('hex') + ':' + iv.toString('hex') + ':' + encrypted.toString('hex');
 };
 
 const decrypt = (encryptedText, key) => {
-  const [ivHex, encHex] = encryptedText.split(':');
+  const [saltHex, ivHex, encHex] = encryptedText.split(':');
+  const salt = Buffer.from(saltHex, 'hex');
   const iv = Buffer.from(ivHex, 'hex');
   const encrypted = Buffer.from(encHex, 'hex');
-  const k = crypto.scryptSync(key, 'salt', 32);
+  const k = crypto.scryptSync(key, salt, 32);
   const decipher = crypto.createDecipheriv('aes-256-cbc', k, iv);
   const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
   return decrypted.toString();
