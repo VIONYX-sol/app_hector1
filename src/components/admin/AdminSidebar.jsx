@@ -2,10 +2,9 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, CalendarDays, Users, CreditCard, FileText, 
-  Receipt, BarChart3, Settings, DoorOpen, LogOut, ChevronLeft, ChevronRight, Globe
+  Receipt, BarChart3, Settings, DoorOpen, Globe, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -72,13 +71,6 @@ export default function AdminSidebar({ collapsed, onToggle }) {
           <DoorOpen className="w-5 h-5 shrink-0" />
           {!collapsed && <span>Ver web pública</span>}
         </Link>
-        <button
-          onClick={() => base44.auth.logout()}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
-        >
-          <LogOut className="w-5 h-5 shrink-0" />
-          {!collapsed && <span>Cerrar sesión</span>}
-        </button>
       </div>
     </aside>
   );

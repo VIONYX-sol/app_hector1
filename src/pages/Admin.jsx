@@ -2,8 +2,8 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarDays, Users, CreditCard, TrendingUp, ArrowUpRight, ArrowDownRight, DoorOpen } from 'lucide-react';
-import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { CalendarDays, Users, CreditCard, ArrowUpRight, ArrowDownRight, DoorOpen } from 'lucide-react';
+import { format, startOfMonth } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import AdminRecentReservations from '../components/admin/AdminRecentReservations';
 
