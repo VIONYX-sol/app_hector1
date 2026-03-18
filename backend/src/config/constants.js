@@ -1,0 +1,71 @@
+'use strict';
+
+module.exports = {
+  ROLES: {
+    SUPERADMIN: 'superadmin',
+    ADMIN: 'admin',
+    MANAGER: 'manager',
+    STAFF: 'staff',
+    CLIENT: 'client',
+  },
+  BOOKING_STATUS: {
+    PENDING: 'pending',
+    CONFIRMED: 'confirmed',
+    ACTIVE: 'active',
+    COMPLETED: 'completed',
+    CANCELLED: 'cancelled',
+    NO_SHOW: 'no_show',
+  },
+  PAYMENT_STATUS: {
+    PENDING: 'pending',
+    PARTIAL: 'partial',
+    PAID: 'paid',
+    REFUNDED: 'refunded',
+    FAILED: 'failed',
+  },
+  INVOICE_STATUS: {
+    DRAFT: 'draft',
+    ISSUED: 'issued',
+    SENT: 'sent',
+    PAID: 'paid',
+    OVERDUE: 'overdue',
+    CANCELLED: 'cancelled',
+    VERIFACTU_SENT: 'verifactu_sent',
+  },
+  INVOICE_TYPE: {
+    INVOICE: 'invoice',
+    SIMPLIFIED: 'simplified',
+    CREDIT_NOTE: 'credit_note',
+    PROFORMA: 'proforma',
+  },
+  PAYMENT_METHOD: {
+    CARD: 'card',
+    TRANSFER: 'transfer',
+    CASH: 'cash',
+    BIZUM: 'bizum',
+    SEPA: 'sepa',
+  },
+  WEBHOOK_EVENTS: [
+    'booking.created',
+    'booking.confirmed',
+    'booking.cancelled',
+    'booking.completed',
+    'payment.received',
+    'payment.refunded',
+    'invoice.issued',
+    'invoice.paid',
+    'customer.created',
+    'customer.updated',
+  ],
+  TAX_RATES: {
+    STANDARD: 21,
+    REDUCED: 10,
+    SUPER_REDUCED: 4,
+    EXEMPT: 0,
+  },
+  PAGINATION: {
+    DEFAULT_PAGE: 1,
+    DEFAULT_LIMIT: 20,
+    MAX_LIMIT: 100,
+  },
+};
