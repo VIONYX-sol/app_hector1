@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '@/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarDays, Users, Clock, DoorOpen, ArrowUpRight, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { CalendarDays, Users, DoorOpen, CheckCircle, AlertCircle } from 'lucide-react';
 import { format, startOfMonth, isAfter } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import AdminRecentReservations from '../components/admin/AdminRecentReservations';

@@ -9,7 +9,7 @@ let logger = null;
 const getLogger = () => {
   if (!logger) {
     try {
-      logger = require('../utils/logger'); // eslint-disable-line
+      logger = require('../utils/logger');  
     } catch {
       logger = console;
     }
@@ -24,7 +24,7 @@ const getClient = () => {
   if (!client) {
     try {
       // Lazy load to avoid errors when redis is not installed/needed
-      const redis = require('redis'); // eslint-disable-line
+      const redis = require('redis');  
       client = redis.createClient({ url: process.env.REDIS_URL });
       client.on('error', (err) => {
         getLogger().error('Redis error:', err.message);

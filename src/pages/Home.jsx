@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { publicApi } from '@/api/client';
 import { Button } from '@/components/ui/button';
-import { CalendarCheck, ArrowRight, Users, Clock, MapPin } from 'lucide-react';
+import { CalendarCheck, ArrowRight, Users, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Home() {

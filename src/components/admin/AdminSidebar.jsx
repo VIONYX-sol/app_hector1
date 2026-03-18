@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { 
-  LayoutDashboard, CalendarDays, Users, DoorOpen, CalendarX,
+  LayoutDashboard, CalendarDays, Users, DoorOpen,
   ChevronLeft, ChevronRight, LogOut, Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

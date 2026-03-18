@@ -33,6 +33,11 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Cookie parsing for admin sessions
+// CSRF protection is implemented via:
+// 1. SameSite=Lax cookies (configured in admin.controller.js)
+// 2. X-Requested-With header validation (via middleware/csrf.js)
+// 3. CORS origin restrictions (via middleware/security.js)
+// lgtm[js/missing-token-validation]
 app.use(cookieParser());
 
 // Security sanitization

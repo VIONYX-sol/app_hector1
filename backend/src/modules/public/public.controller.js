@@ -95,9 +95,6 @@ async function createReservation(req, res, next) {
 
     const reservation = await publicService.createReservation(value);
     
-    // TODO: Send notification email via Microsoft Graph
-    // This will be implemented in the mail service
-    
     res.status(201).json(reservation);
   } catch (err) {
     if (err.statusCode === 409) {

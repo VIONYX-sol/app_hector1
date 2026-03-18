@@ -17,7 +17,7 @@ const notFound = (req, res, next) => {
   next(err);
 };
 
-const errorHandler = (err, req, res, next) => { // eslint-disable-line no-unused-vars
+const errorHandler = (err, req, res, next) => {  
   let statusCode = err.statusCode || 500;
   let message = err.message || 'Internal server error';
   let code = err.code || 'INTERNAL_ERROR';

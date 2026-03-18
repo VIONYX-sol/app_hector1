@@ -16,13 +16,22 @@ class ApiError extends Error {
 
 async function request(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
+  const method = options.method || 'GET';
+  
+  // Add CSRF header for mutation requests
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    headers['X-Requested-With'] = 'XMLHttpRequest';
+  }
+  
   const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    credentials: 'include', // Important for httpOnly cookie auth
     ...options,
+    headers,
+    credentials: 'include', // Important for httpOnly cookie auth
   };
 
   const response = await fetch(url, config);

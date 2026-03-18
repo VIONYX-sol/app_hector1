@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Pencil, Users, Trash2, Calendar, MapPin, Image } from 'lucide-react';
+import { Plus, Pencil, Users, Trash2, Calendar, Image } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 
