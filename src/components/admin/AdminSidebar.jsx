@@ -1,27 +1,27 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '@/lib/AuthContext';
 import { 
-  LayoutDashboard, CalendarDays, Users, CreditCard, FileText, 
-  Receipt, BarChart3, Settings, DoorOpen, Globe, ChevronLeft, ChevronRight
+  LayoutDashboard, CalendarDays, Users, DoorOpen,
+  ChevronLeft, ChevronRight, LogOut, Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/Admin' },
-  { label: 'Reservas', icon: CalendarDays, path: '/AdminReservations' },
-  { label: 'Salas', icon: DoorOpen, path: '/AdminRooms' },
-  { label: 'Clientes', icon: Users, path: '/AdminCustomers' },
-  { label: 'Pagos', icon: CreditCard, path: '/AdminPayments' },
-  { label: 'Facturas', icon: FileText, path: '/AdminInvoices' },
-  { label: 'Gastos', icon: Receipt, path: '/AdminExpenses' },
-  { label: 'Analítica', icon: BarChart3, path: '/AdminAnalytics' },
-  { label: 'Sitio web', icon: Globe, path: '/AdminWebsite' },
-  { label: 'Configuración', icon: Settings, path: '/AdminSettings' },
+  { label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
+  { label: 'Reservas', icon: CalendarDays, path: '/admin/reservations' },
+  { label: 'Espacios', icon: DoorOpen, path: '/admin/venues' },
+  { label: 'Clientes', icon: Users, path: '/admin/customers' },
 ];
 
 export default function AdminSidebar({ collapsed, onToggle }) {
   const location = useLocation();
+  const { logout, user } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
     <aside className={cn(
@@ -30,9 +30,9 @@ export default function AdminSidebar({ collapsed, onToggle }) {
     )}>
       <div className="p-4 border-b border-border flex items-center justify-between">
         {!collapsed && (
-          <Link to="/Admin" className="flex items-center gap-2">
+          <Link to="/admin" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">B</span>
+              <CalendarDays className="w-4 h-4 text-primary-foreground" />
             </div>
             <span className="font-semibold text-foreground">Admin</span>
           </Link>
@@ -44,7 +44,8 @@ export default function AdminSidebar({ collapsed, onToggle }) {
       
       <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
         {navItems.map(item => {
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path || 
+            (item.path !== '/admin' && location.pathname.startsWith(item.path));
           return (
             <Link
               key={item.path}
@@ -63,14 +64,22 @@ export default function AdminSidebar({ collapsed, onToggle }) {
         })}
       </nav>
 
-      <div className="p-2 border-t border-border">
+      <div className="p-2 border-t border-border space-y-1">
         <Link
           to="/"
+          target="_blank"
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
         >
-          <DoorOpen className="w-5 h-5 shrink-0" />
+          <Globe className="w-5 h-5 shrink-0" />
           {!collapsed && <span>Ver web pública</span>}
         </Link>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+        >
+          <LogOut className="w-5 h-5 shrink-0" />
+          {!collapsed && <span>Cerrar sesión</span>}
+        </button>
       </div>
     </aside>
   );

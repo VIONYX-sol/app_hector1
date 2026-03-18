@@ -5,59 +5,60 @@ require('dotenv').config();
 const express = require('express');
 const compression = require('compression');
 const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 
 const logger = require('./src/utils/logger');
-const { helmetConfig, corsMiddleware, hppMiddleware, mongoSanitizeMiddleware, xssMiddleware } = require('./src/middleware/security');
+const { helmetConfig, corsMiddleware, hppMiddleware, xssMiddleware } = require('./src/middleware/security');
 const { generalLimiter } = require('./src/middleware/rateLimiter');
 const { notFound, errorHandler } = require('./src/middleware/errorHandler');
-const { tenantMiddleware } = require('./src/middleware/tenant');
 
-const authRoutes = require('./src/modules/auth/auth.routes');
-const companiesRoutes = require('./src/modules/companies/companies.routes');
-const usersRoutes = require('./src/modules/users/users.routes');
-const roomsRoutes = require('./src/modules/rooms/rooms.routes');
-const bookingsRoutes = require('./src/modules/bookings/bookings.routes');
-const paymentsRoutes = require('./src/modules/payments/payments.routes');
-const invoicesRoutes = require('./src/modules/invoices/invoices.routes');
-const expensesRoutes = require('./src/modules/expenses/expenses.routes');
-const crmRoutes = require('./src/modules/crm/crm.routes');
-const documentsRoutes = require('./src/modules/documents/documents.routes');
-const analyticsRoutes = require('./src/modules/analytics/analytics.routes');
-const notificationsRoutes = require('./src/modules/notifications/notifications.routes');
-const webhooksRoutes = require('./src/modules/webhooks/webhooks.routes');
-const complianceRoutes = require('./src/modules/compliance/compliance.routes');
+// Import new route modules
+const publicRoutes = require('./src/modules/public/public.routes');
+const adminRoutes = require('./src/modules/admin/admin.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Trust proxy for secure cookies behind reverse proxy
 app.set('trust proxy', 1);
 
+// Security middleware
 app.use(helmetConfig);
 app.use(corsMiddleware);
 app.use(hppMiddleware);
 
-app.use('/api/v1/webhooks/stripe', express.raw({ type: 'application/json' }));
-
+// Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-app.use(mongoSanitizeMiddleware);
+// Cookie parsing for admin sessions
+// CSRF protection is implemented via:
+// 1. SameSite=Lax cookies (configured in admin.controller.js)
+// 2. X-Requested-With header validation (via middleware/csrf.js)
+// 3. CORS origin restrictions (via middleware/security.js)
+// lgtm[js/missing-token-validation]
+app.use(cookieParser());
+
+// Security sanitization
 app.use(xssMiddleware);
 
+// Compression
 app.use(compression());
 
+// Request logging
 app.use(morgan('combined', {
   stream: { write: (message) => logger.http(message.trim()) },
-  skip: (req) => req.path === '/health',
+  skip: (req) => req.path === '/health' || req.path === '/api/health',
 }));
 
+// Rate limiting for API routes
 app.use('/api/', generalLimiter);
 
+// Static files (uploads)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use(tenantMiddleware);
-
+// Health check endpoints
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -67,33 +68,24 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.get('/api/v1/health', (req, res) => {
-  res.json({ status: 'ok', api: 'v1' });
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
 });
 
-const API = '/api/v1';
-app.use(`${API}/auth`, authRoutes);
-app.use(`${API}/companies`, companiesRoutes);
-app.use(`${API}/users`, usersRoutes);
-app.use(`${API}/rooms`, roomsRoutes);
-app.use(`${API}/bookings`, bookingsRoutes);
-app.use(`${API}/payments`, paymentsRoutes);
-app.use(`${API}/invoices`, invoicesRoutes);
-app.use(`${API}/expenses`, expensesRoutes);
-app.use(`${API}/crm`, crmRoutes);
-app.use(`${API}/documents`, documentsRoutes);
-app.use(`${API}/analytics`, analyticsRoutes);
-app.use(`${API}/notifications`, notificationsRoutes);
-app.use(`${API}/webhooks`, webhooksRoutes);
-app.use(`${API}/compliance`, complianceRoutes);
+// API routes
+app.use('/api/public', publicRoutes);
+app.use('/api/admin', adminRoutes);
 
+// Error handling
 app.use(notFound);
 app.use(errorHandler);
 
+// Start server
 const server = app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
 });
 
+// Graceful shutdown
 const gracefulShutdown = (signal) => {
   logger.info(`${signal} received. Starting graceful shutdown...`);
   server.close(async () => {

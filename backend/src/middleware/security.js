@@ -3,7 +3,6 @@
 const helmet = require('helmet');
 const cors = require('cors');
 const hpp = require('hpp');
-const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss');
 
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173')
@@ -12,6 +11,7 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173')
 
 const corsOptions = {
   origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -20,7 +20,7 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Company-Slug'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   exposedHeaders: ['X-Total-Count', 'X-Page', 'X-Page-Size'],
   maxAge: 86400,
 };
@@ -29,7 +29,7 @@ const helmetConfig = helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", 'data:', 'https:'],
       connectSrc: ["'self'"],
@@ -65,6 +65,5 @@ module.exports = {
   helmetConfig,
   corsMiddleware: cors(corsOptions),
   hppMiddleware: hpp(),
-  mongoSanitizeMiddleware: mongoSanitize(),
   xssMiddleware,
 };

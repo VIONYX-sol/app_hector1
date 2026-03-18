@@ -1,56 +1,73 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { ArrowRight } from 'lucide-react';
 
 const statusMap = {
-  temporal_block: { label: 'Bloqueada', class: 'bg-muted text-muted-foreground' },
-  pending_deposit: { label: 'Pend. señal', class: 'bg-yellow-100 text-yellow-800' },
+  pending: { label: 'Pendiente', class: 'bg-yellow-100 text-yellow-800' },
   confirmed: { label: 'Confirmada', class: 'bg-blue-100 text-blue-800' },
-  paid: { label: 'Pagada', class: 'bg-green-100 text-green-800' },
-  in_progress: { label: 'En curso', class: 'bg-primary/10 text-primary' },
-  completed: { label: 'Completada', class: 'bg-muted text-muted-foreground' },
-  cancelled: { label: 'Cancelada', class: 'bg-red-100 text-red-800' },
-  expired: { label: 'Expirada', class: 'bg-muted text-muted-foreground' },
-  no_show: { label: 'No show', class: 'bg-red-50 text-red-600' },
+  rejected: { label: 'Rechazada', class: 'bg-red-100 text-red-800' },
+  cancelled: { label: 'Cancelada', class: 'bg-gray-100 text-gray-800' },
+  owner_blocked: { label: 'Bloqueada', class: 'bg-purple-100 text-purple-800' },
 };
 
 export default function AdminRecentReservations({ reservations }) {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-base">Últimas reservas</CardTitle>
+        <Link to="/admin/reservations">
+          <Button variant="ghost" size="sm" className="gap-1 text-xs">
+            Ver todas
+            <ArrowRight className="w-3 h-3" />
+          </Button>
+        </Link>
       </CardHeader>
       <CardContent className="p-0">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Cliente</TableHead>
-              <TableHead>Sala</TableHead>
-              <TableHead>Fecha</TableHead>
-              <TableHead>Horario</TableHead>
-              <TableHead>Importe</TableHead>
+              <TableHead>Espacio</TableHead>
+              <TableHead>Fechas</TableHead>
+              <TableHead>Evento</TableHead>
               <TableHead>Estado</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {reservations.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  No hay reservas
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  No hay reservas recientes
                 </TableCell>
               </TableRow>
             ) : reservations.map(r => {
-              const st = statusMap[r.status] || statusMap.confirmed;
+              const st = statusMap[r.status] || statusMap.pending;
               return (
                 <TableRow key={r.id}>
-                  <TableCell className="font-medium">{r.customer_name || r.customer_email || '—'}</TableCell>
-                  <TableCell>{r.room_name || '—'}</TableCell>
-                  <TableCell>{r.date ? format(new Date(r.date), 'dd/MM/yyyy') : '—'}</TableCell>
-                  <TableCell className="text-muted-foreground">{r.start_time} - {r.end_time}</TableCell>
-                  <TableCell className="font-medium">{r.total_amount?.toFixed(2)}€</TableCell>
-                  <TableCell><Badge className={`text-xs border-0 ${st.class}`}>{st.label}</Badge></TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium text-sm">{r.customer_name_snapshot || '—'}</p>
+                      <p className="text-xs text-muted-foreground">{r.customer_email_snapshot}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm">{r.venue?.name || '—'}</TableCell>
+                  <TableCell className="text-sm">
+                    {r.start_date && r.end_date ? (
+                      <span>
+                        {format(new Date(r.start_date), 'd MMM', { locale: es })} - {format(new Date(r.end_date), 'd MMM', { locale: es })}
+                      </span>
+                    ) : '—'}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{r.event_type || '—'}</TableCell>
+                  <TableCell>
+                    <Badge className={"text-xs border-0 " + st.class}>{st.label}</Badge>
+                  </TableCell>
                 </TableRow>
               );
             })}

@@ -1,51 +1,83 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { adminApi } from '@/api/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarDays, Users, CreditCard, ArrowUpRight, ArrowDownRight, DoorOpen } from 'lucide-react';
-import { format, startOfMonth } from 'date-fns';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { CalendarDays, Users, DoorOpen, CheckCircle, AlertCircle } from 'lucide-react';
+import { format, startOfMonth, isAfter } from 'date-fns';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import AdminRecentReservations from '../components/admin/AdminRecentReservations';
 
 export default function Admin() {
   const { data: reservations = [] } = useQuery({
     queryKey: ['admin-reservations'],
-    queryFn: () => base44.entities.Reservation.list('-created_date', 100),
+    queryFn: () => adminApi.getReservations({ limit: 100 }),
+  });
+
+  const { data: venues = [] } = useQuery({
+    queryKey: ['admin-venues'],
+    queryFn: () => adminApi.getVenues(),
   });
 
   const { data: customers = [] } = useQuery({
-    queryKey: ['admin-customers-count'],
-    queryFn: () => base44.entities.Customer.list('-created_date', 100),
-  });
-
-  const { data: rooms = [] } = useQuery({
-    queryKey: ['admin-rooms'],
-    queryFn: () => base44.entities.Room.list('sort_order', 50),
+    queryKey: ['admin-customers'],
+    queryFn: () => adminApi.getCustomers({ limit: 100 }),
   });
 
   const now = new Date();
   const monthStart = startOfMonth(now);
-  const monthReservations = reservations.filter(r => new Date(r.created_date) >= monthStart);
-  const activeReservations = reservations.filter(r => ['confirmed', 'paid', 'pending_deposit'].includes(r.status));
-  const monthRevenue = monthReservations.reduce((s, r) => s + (r.total_amount || 0), 0);
+  
+  // Calculate stats
+  const monthReservations = reservations.filter(r => new Date(r.created_at) >= monthStart);
+  const pendingReservations = reservations.filter(r => r.status === 'pending');
+  const confirmedReservations = reservations.filter(r => r.status === 'confirmed');
+  const upcomingReservations = reservations.filter(r => 
+    ['pending', 'confirmed'].includes(r.status) && 
+    isAfter(new Date(r.start_date), now)
+  );
+  const activeVenues = venues.filter(v => v.is_active);
 
   const stats = [
-    { title: 'Reservas activas', value: activeReservations.length, icon: CalendarDays, change: '+12%', up: true },
-    { title: 'Clientes', value: customers.length, icon: Users, change: '+8%', up: true },
-    { title: 'Ingresos del mes', value: `${monthRevenue.toFixed(0)}€`, icon: CreditCard, change: '+23%', up: true },
-    { title: 'Salas activas', value: rooms.filter(r => r.status === 'active').length, icon: DoorOpen, change: '', up: true },
+    { 
+      title: 'Reservas pendientes', 
+      value: pendingReservations.length, 
+      icon: AlertCircle, 
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-100',
+    },
+    { 
+      title: 'Confirmadas', 
+      value: confirmedReservations.length, 
+      icon: CheckCircle, 
+      color: 'text-green-600',
+      bgColor: 'bg-green-100',
+    },
+    { 
+      title: 'Próximas', 
+      value: upcomingReservations.length, 
+      icon: CalendarDays, 
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100',
+    },
+    { 
+      title: 'Espacios activos', 
+      value: activeVenues.length, 
+      icon: DoorOpen, 
+      color: 'text-primary',
+      bgColor: 'bg-primary/10',
+    },
   ];
 
-  // Chart data (last 7 days placeholder)
+  // Chart data (last 7 days)
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
     const dayStr = format(d, 'yyyy-MM-dd');
-    const dayReservations = reservations.filter(r => r.date === dayStr);
+    const dayReservations = reservations.filter(r => 
+      format(new Date(r.created_at), 'yyyy-MM-dd') === dayStr
+    );
     return {
       name: format(d, 'EEE'),
       reservas: dayReservations.length,
-      ingresos: dayReservations.reduce((s, r) => s + (r.total_amount || 0), 0),
     };
   });
 
@@ -64,15 +96,9 @@ export default function Admin() {
                 <div>
                   <p className="text-sm text-muted-foreground">{stat.title}</p>
                   <p className="text-2xl font-bold mt-1">{stat.value}</p>
-                  {stat.change && (
-                    <div className={`flex items-center gap-1 text-xs mt-1 ${stat.up ? 'text-green-600' : 'text-red-500'}`}>
-                      {stat.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                      <span>{stat.change} vs mes anterior</span>
-                    </div>
-                  )}
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <stat.icon className="w-5 h-5 text-primary" />
+                <div className={`w-10 h-10 rounded-xl ${stat.bgColor} flex items-center justify-center`}>
+                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
                 </div>
               </div>
             </CardContent>
@@ -83,34 +109,49 @@ export default function Admin() {
       <div className="grid lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Reservas (últimos 7 días)</CardTitle>
+            <CardTitle className="text-base">Nuevas reservas (últimos 7 días)</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={last7Days}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
                 <Tooltip />
                 <Bar dataKey="reservas" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Ingresos (últimos 7 días)</CardTitle>
+            <CardTitle className="text-base">Resumen del mes</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={240}>
-              <LineChart data={last7Days}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip />
-                <Line type="monotone" dataKey="ingresos" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))' }} />
-              </LineChart>
-            </ResponsiveContainer>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <CalendarDays className="w-5 h-5 text-primary" />
+                  <span className="text-sm">Reservas este mes</span>
+                </div>
+                <span className="font-bold">{monthReservations.length}</span>
+              </div>
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Users className="w-5 h-5 text-primary" />
+                  <span className="text-sm">Total clientes</span>
+                </div>
+                <span className="font-bold">{customers.length}</span>
+              </div>
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <DoorOpen className="w-5 h-5 text-primary" />
+                  <span className="text-sm">Espacios disponibles</span>
+                </div>
+                <span className="font-bold">{activeVenues.length}</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
